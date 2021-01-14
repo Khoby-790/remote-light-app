@@ -2,26 +2,34 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import io from 'socket.io-client';
 
-const BASE_URL = "http://192.168.100.14:3000"
+const BASE_URL = "http://192.168.100.9:3000"
+
+const socket = io(BASE_URL);
 
 const App = () => {
-  let socket = null;
   const [isOn, setIsOn] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    socket = io.connect(BASE_URL, {
-      transports: ['websocket'],
-      reconnectionAttempts: 15 //Nombre de fois qu'il doit réessayer de se connecter
-    });
-    if (socket) {
-      alert(socket.connected)
+    if (!initialized) {
+      setInitialized(socket.connected)
     }
   }, [])
 
 
+  useEffect(() => {
+    socket.on("Joined", (lightOn) => {
+      setIsOn(lightOn);
+    })
+  }, []);
+
+
   const toggleLight = () => {
     // handle socket emission
-    setIsOn(prev => !prev)
+    setIsOn(prev => {
+      socket.emit("switch", prev ? "Off" : "On")
+      return !prev
+    })
   }
 
   return (
